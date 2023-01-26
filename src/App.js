@@ -6,40 +6,60 @@ import "sanitize.css";
 
 import { FloatingLabelInput, RaisedButton } from "./components";
 
+  /**
+   * 
+   * @param {String} url Endpoint to call
+   * @param {Function} callback Function to call with body as argument
+   * @param {Object} options Fetch options (method, body, etc)
+   */
+  const handleFetch = async (endpoint, callback = () => {}, options = { method: "GET" }) => {
+    const data = await fetch(`/.netlify/functions/${endpoint}`, options);
+    const json = await data.json();
+    callback(json)
+  }
+
 function App() {
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const onFetch = data => data.message && setErrorMessage(data.message);
 
-  const handleFetch = async () => {
-    if (!name) return;
+  const handleWelcome = () => handleFetch(`hello`, json => setMessage(json.message));
 
-    const data = await fetch(`/.netlify/functions/hello?name=${name}`);
-    const { message } = await data.json();
-    console.log({ data });
-    setMessage(message);
-  };
+  const handleWeather = () => handleFetch(`weather`, json => console.log(json))
 
-  const handleFetchWeather = async () => {
-    const data = await fetch(`/.netlify/functions/weather`);
-    const json = await data.json();
-    console.log({ json });
-  };
+  const addUser = async () => handleFetch(`mailchimp`, onFetch, { method: "POST", body: JSON.stringify({ email }) });
 
   const handleChange = e => setName(e.target.value);
+  const handleChangeEmail = e => setEmail(e.target.value);
+
 
   return (
     <div className="App">
       <div className="section">
+        <h2>Hello</h2>
         <h3>{message}</h3>
         <FloatingLabelInput
           value={name}
           onChange={handleChange}
           label="Your name here"
         />
-        <RaisedButton onClick={handleFetch}>Send</RaisedButton>
+        <RaisedButton onClick={handleWelcome}>Send</RaisedButton>
       </div>
       <div className="section">
-        <RaisedButton onClick={handleFetchWeather}>Send</RaisedButton>
+        <h2>Weather</h2>
+        <RaisedButton onClick={handleWeather}>Send</RaisedButton>
+      </div>
+      <div className="section">
+        <h2>MailChimp</h2>
+        {errorMessage}
+        <FloatingLabelInput
+          value={email}
+          onChange={handleChangeEmail}
+          label="Your name here"
+        />
+        <RaisedButton onClick={addUser}>Submit</RaisedButton>
       </div>
     </div>
   );

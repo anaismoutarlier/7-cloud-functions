@@ -18,5 +18,4 @@ exports.handler = async function (event) {
     };
   }
 
-  //.then().then().then().catch()
 };
